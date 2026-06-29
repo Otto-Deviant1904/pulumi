@@ -57,8 +57,8 @@ func TestExtensionArgs(t *testing.T) {
 		},
 		{
 			name:          "extension honors shell quoting",
-			args:          []string{"--extension", `incantation="wingardium leviosa"`, "example.com/base"},
-			wantParams:    []string{"incantation=wingardium leviosa"},
+			args:          []string{"--extension", `species="giant pacific octopus"`, "example.com/base"},
+			wantParams:    []string{"species=giant pacific octopus"},
 			wantExtension: true,
 		},
 		{
