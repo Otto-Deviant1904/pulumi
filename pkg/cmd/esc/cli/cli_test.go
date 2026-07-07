@@ -218,6 +218,10 @@ func (e *testEnvironments) LoadEnvironment(ctx context.Context, ref string) ([]b
 	return env.latest().yaml, rot128{}, nil
 }
 
+func (e *testEnvironments) AuthorizeImport(_ context.Context, _ string, _ string, _ bool) error {
+	return nil
+}
+
 type testEnvironmentRetract struct {
 	replacement int
 	reason      string
@@ -803,6 +807,7 @@ func (c *testPulumiClient) OpenYAMLEnvironment(
 	orgName string,
 	yaml []byte,
 	duration time.Duration,
+	opts ...client.OpenYAMLOption,
 ) (string, []client.EnvironmentDiagnostic, error) {
 	return c.openEnvironment(ctx, orgName, "<yaml>", yaml)
 }
