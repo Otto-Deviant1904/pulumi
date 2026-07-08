@@ -183,12 +183,6 @@ quoted as a single shell-style string:
 			}
 
 			if asExtension {
-				source := strings.Split(pluginSource, "@")[0]
-				if ext := filepath.Ext(source); ext == ".yaml" || ext == ".yml" || ext == ".json" {
-					// No underlying provider to record for a file-based schema.
-					return nil
-				}
-
 				if target.projectFilePath != nil {
 					target.proj.AddPackage(pkg.Name, workspace.PackageSpec{
 						Source:     pkg.ExtensionParameterization.BaseProvider.Name,
