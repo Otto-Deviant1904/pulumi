@@ -48,6 +48,8 @@ type checkArgs struct {
 
 func newSchemaCheckCommand() *cobra.Command {
 	schemaCheckArgs := checkArgs{}
+	var parameterArgs []string
+	var asExtension bool
 
 	cmd := &cobra.Command{
 		Use:   "check",
@@ -84,11 +86,6 @@ or a JSON/YAML schema file. Pass "-" to read a JSON schema from stdin.`,
 			}
 			defer contract.IgnoreClose(pctx)
 
-			parameterArgs, asExtension, err := constrictor.ExtensionArgs(cmd, args)
-			if err != nil {
-				return err
-			}
-
 			spec, err := schemaFromSourceOrStdin(cmd, pctx, reg, source, parameterArgs, asExtension)
 			if err != nil {
 				return err
@@ -122,7 +119,7 @@ or a JSON/YAML schema file. Pass "-" to read a JSON schema from stdin.`,
 
 	cmd.PersistentFlags().BoolVar(&schemaCheckArgs.allowDanglingReferences, "allow-dangling-references", false,
 		"Whether references to nonexistent types should be considered errors")
-	constrictor.AddExtensionFlag(cmd)
+	packages.AddExtensionFlag(cmd, &parameterArgs, &asExtension)
 
 	return cmd
 }

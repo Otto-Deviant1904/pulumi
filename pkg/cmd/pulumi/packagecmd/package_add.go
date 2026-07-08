@@ -46,6 +46,8 @@ import (
 // Constructs the `pulumi package add` command.
 func newPackageAddCmd() *cobra.Command {
 	var language string
+	var parameterArgs []string
+	var asExtension bool
 	cmd := &cobra.Command{
 		Use:   "add",
 		Short: "Add a package to your Pulumi project, plugin, or current directory.",
@@ -156,10 +158,6 @@ quoted as a single shell-style string:
 
 			pluginSource := args[0]
 
-			parameterArgs, asExtension, err := constrictor.ExtensionArgs(cmd, args)
-			if err != nil {
-				return err
-			}
 			parameters := &plugin.ParameterizeArgs{Args: parameterArgs}
 
 			pkg, packageSpec, diags, err := packages.InstallPackage(
@@ -274,7 +272,7 @@ quoted as a single shell-style string:
 
 	cmd.Flags().StringVar(&language, "language", "",
 		"Run outside a Pulumi project or plugin: [nodejs|python|go|dotnet|java]")
-	constrictor.AddExtensionFlag(cmd)
+	packages.AddExtensionFlag(cmd, &parameterArgs, &asExtension)
 
 	return cmd
 }

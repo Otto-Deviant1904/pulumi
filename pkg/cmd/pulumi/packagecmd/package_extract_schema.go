@@ -37,6 +37,8 @@ import (
 )
 
 func newExtractSchemaCommand() *cobra.Command {
+	var parameterArgs []string
+	var asExtension bool
 	cmd := &cobra.Command{
 		Use:   "get-schema",
 		Short: "Get the schema.json from a package",
@@ -71,10 +73,6 @@ If a folder either the plugin binary must match the folder name (e.g. 'aws' and 
 			}
 			defer contract.IgnoreClose(pctx)
 
-			parameterArgs, asExtension, err := constrictor.ExtensionArgs(cmd, args)
-			if err != nil {
-				return err
-			}
 			parameters := &plugin.ParameterizeArgs{Args: parameterArgs}
 			spec, _, err := packages.SchemaFromSchemaSource(pkgWorkspace.Instance, pctx, source, parameters,
 				registry, env.Global(), 0 /* unbounded concurrency */, asExtension)
@@ -117,7 +115,7 @@ If a folder either the plugin binary must match the folder name (e.g. 'aws' and 
 	// In other words, a provider parameter can be `--foo` as long as it's after `--`.
 	cmd.Use = "get-schema <schema-source> [flags] [--] [provider-parameter]..."
 
-	constrictor.AddExtensionFlag(cmd)
+	packages.AddExtensionFlag(cmd, &parameterArgs, &asExtension)
 
 	return cmd
 }

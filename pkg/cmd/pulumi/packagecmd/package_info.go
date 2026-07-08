@@ -46,6 +46,8 @@ func newPackageInfoCmd() *cobra.Command {
 	var module string
 	var resource string
 	var function string
+	var parameterArgs []string
+	var asExtension bool
 	cmd := &cobra.Command{
 		Use:   "info",
 		Short: "Show information about a package",
@@ -82,10 +84,6 @@ The <provider> argument can be specified in the same way as in 'pulumi package a
 				return errors.New("only one of --function or --resource can be specified")
 			}
 
-			parameterArgs, asExtension, err := constrictor.ExtensionArgs(cmd, args)
-			if err != nil {
-				return err
-			}
 			parameters := &plugin.ParameterizeArgs{Args: parameterArgs}
 			spec, _, err := packages.SchemaFromSchemaSource(pkgWorkspace.Instance, pctx, args[0], parameters,
 				registry, env.Global(), 0 /* unbounded concurrency */, asExtension)
@@ -122,7 +120,7 @@ The <provider> argument can be specified in the same way as in 'pulumi package a
 	cmd.Flags().StringVarP(&module, "module", "m", "", "Module name")
 	cmd.Flags().StringVarP(&resource, "resource", "r", "", "Resource name")
 	cmd.Flags().StringVarP(&function, "function", "f", "", "Function name")
-	constrictor.AddExtensionFlag(cmd)
+	packages.AddExtensionFlag(cmd, &parameterArgs, &asExtension)
 
 	return cmd
 }

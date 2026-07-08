@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package constrictor
+package packages
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestExtensionArgs(t *testing.T) {
+func TestAddExtensionFlag(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -84,18 +84,20 @@ func TestExtensionArgs(t *testing.T) {
 			t.Parallel()
 
 			cmd := &cobra.Command{Use: "test"}
-			AddExtensionFlag(cmd)
+			var params []string
+			var isExtension bool
+			AddExtensionFlag(cmd, &params, &isExtension)
 			require.NoError(t, cmd.Flags().Parse(tt.args))
 
-			got, asExtension, err := ExtensionArgs(cmd, cmd.Flags().Args())
+			err := cmd.PreRunE(cmd, cmd.Flags().Args())
 			if tt.wantErr != "" {
+				require.Error(t, err)
 				assert.ErrorContains(t, err, tt.wantErr)
-				assert.Nil(t, got)
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tt.wantParams, got)
-			assert.Equal(t, tt.wantExtension, asExtension)
+			assert.Equal(t, tt.wantParams, params)
+			assert.Equal(t, tt.wantExtension, isExtension)
 		})
 	}
 }
