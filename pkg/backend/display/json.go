@@ -291,7 +291,7 @@ func getPreviewMetadataStep(
 	ctx := context.TODO()
 	if m.Old != nil {
 		oldState := stateForJSONOutput(m.Old.State, opts)
-		res, err := stack.SerializeResource(ctx, oldState, config.NewPanicCrypter(), false /* showSecrets */)
+		res, _, err := stack.SerializeResource(ctx, oldState, config.NewPanicCrypter(), false /* showSecrets */)
 		if err == nil {
 			step.OldState = &res
 		} else {
@@ -300,7 +300,7 @@ func getPreviewMetadataStep(
 	}
 	if m.New != nil {
 		newState := stateForJSONOutput(m.New.State, opts)
-		res, err := stack.SerializeResource(ctx, newState, config.NewPanicCrypter(), false /* showSecrets */)
+		res, _, err := stack.SerializeResource(ctx, newState, config.NewPanicCrypter(), false /* showSecrets */)
 		if err == nil {
 			step.NewState = &res
 		} else {
