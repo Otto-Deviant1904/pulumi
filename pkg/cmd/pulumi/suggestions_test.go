@@ -54,6 +54,11 @@ func TestUnknownCommandSuggestions(t *testing.T) {
 			wantSuggestions: []string{"pulumi stack webhook new", "pulumi org webhook new"},
 		},
 		{
+			args:            []string{"org", "member", "lsit"},
+			wantErr:         `unknown command "lsit" for "pulumi org member"`,
+			wantSuggestions: []string{"pulumi org member list"},
+		},
+		{
 			args:            []string{"env", "lisst"},
 			wantErr:         `unknown command "lisst" for "pulumi env"`,
 			wantSuggestions: []string{"pulumi env ls"},
@@ -223,6 +228,13 @@ func TestSuggestCommands(t *testing.T) {
 		assert.Empty(t, got)
 	})
 
+	t.Run("transposition typo", func(t *testing.T) {
+		t.Parallel()
+		got := suggestCommands(find("org", "member"), []string{"lsit"})
+		require.NotEmpty(t, got)
+		assert.Equal(t, "pulumi org member list", got[0])
+	})
+
 	t.Run("hidden commands are not suggested", func(t *testing.T) {
 		t.Parallel()
 		got := suggestCommands(root, []string{"secret-cmd"})
@@ -278,6 +290,30 @@ func TestRunnableParentBlamesArgPastSpec(t *testing.T) {
 	// Args within the specification alone must still reach the command.
 	root.SetArgs([]string{"thing", "myname"})
 	require.NoError(t, root.Execute())
+}
+
+func TestEditDistance(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		a, b string
+		want int
+	}{
+		{"list", "list", 0},
+		{"lsit", "list", 1},   // adjacent transposition
+		{"stakc", "stack", 1}, // adjacent transposition
+		{"lisst", "list", 1},  // insertion
+		{"lit", "list", 1},    // deletion
+		{"lost", "list", 1},   // substitution
+		{"LIST", "list", 0},   // case-insensitive
+		{"", "list", 4},
+		{"abcd", "dbca", 2}, // non-adjacent swap still costs 2
+		{"up", "rm", 2},
+	}
+	for _, c := range cases {
+		assert.Equal(t, c.want, editDistance(c.a, c.b), "editDistance(%q, %q)", c.a, c.b)
+		assert.Equal(t, c.want, editDistance(c.b, c.a), "editDistance(%q, %q)", c.b, c.a)
+	}
 }
 
 func TestNormalize(t *testing.T) {

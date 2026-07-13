@@ -20,11 +20,9 @@ import (
 	"slices"
 	"sort"
 	"strings"
-	"unicode"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/texttheater/golang-levenshtein/levenshtein"
 
 	"github.com/pulumi/pulumi/pkg/v3/cmd/pulumi/constrictor"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/result"
@@ -350,19 +348,40 @@ func normalize(token string) []string {
 	return parts
 }
 
-var levenshteinOptions = func() levenshtein.Options {
-	op := levenshtein.DefaultOptionsWithSub
-	op.Matches = func(r1, r2 rune) bool {
-		return unicode.ToLower(r1) == unicode.ToLower(r2)
-	}
-	return op
-}()
-
 // closeEnough scales the allowed edit distance with the longer string.
 func closeEnough(a, b string) bool {
 	threshold := 2
 	if max(len(a), len(b)) < 6 {
 		threshold = 1
 	}
-	return levenshtein.DistanceForStrings([]rune(a), []rune(b), levenshteinOptions) <= threshold
+	return editDistance(a, b) <= threshold
+}
+
+// editDistance returns the optimal-string-alignment distance between a and b:
+// the minimum number of single-rune insertions, deletions, substitutions, and
+// adjacent transpositions, compared case-insensitively. Unlike plain
+// Levenshtein, a swapped pair like "lsit" for "list" costs 1, not 2.
+func editDistance(a, b string) int {
+	ra, rb := []rune(strings.ToLower(a)), []rune(strings.ToLower(b))
+	d := make([][]int, len(ra)+1)
+	for i := range d {
+		d[i] = make([]int, len(rb)+1)
+		d[i][0] = i
+	}
+	for j := 1; j <= len(rb); j++ {
+		d[0][j] = j
+	}
+	for i := 1; i <= len(ra); i++ {
+		for j := 1; j <= len(rb); j++ {
+			cost := 1
+			if ra[i-1] == rb[j-1] {
+				cost = 0
+			}
+			d[i][j] = min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+cost)
+			if i > 1 && j > 1 && ra[i-1] == rb[j-2] && ra[i-2] == rb[j-1] {
+				d[i][j] = min(d[i][j], d[i-2][j-2]+1)
+			}
+		}
+	}
+	return d[len(ra)][len(rb)]
 }
